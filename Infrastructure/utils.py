@@ -1,6 +1,7 @@
 import numpy as np
 import numba
 from typing import List, Callable, Tuple, ClassVar, Iterable, Mapping, Union
+import inspect
 
 
 # Naming data types for type hinting.
@@ -8,6 +9,33 @@ Scalar = Union[complex, float, int]
 Vector = Union[List[Scalar], np.ndarray, Scalar]
 Matrix = Union[List[Vector], Vector, Scalar]
 StaticField = ClassVar
+
+
+class _MetaEnum(type):
+    def __iter__(self):
+        # noinspection PyUnresolvedReferences
+        return self.enum_iter()
+
+    def __contains__(self, item):
+        # noinspection PyUnresolvedReferences
+        return self.enum_contains(item)
+
+
+class BaseEnum(enumerate, metaclass=_MetaEnum):
+
+    @classmethod
+    def enum_iter(cls):
+        return iter(cls.get_all_values())
+
+    @classmethod
+    def enum_contains(cls, item):
+        return item in cls.get_all_values()
+
+    @classmethod
+    def get_all_values(cls):
+        all_attributes = inspect.getmembers(cls, lambda a: not inspect.ismethod(a))
+        all_attributes = [value for name, value in all_attributes if not (name.startswith('__') or name.endswith('__'))]
+        return all_attributes
 
 
 def jit(signature_or_function=None, target: str = "cpu", parallel: bool = False) -> Callable:
