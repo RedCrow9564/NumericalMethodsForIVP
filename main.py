@@ -1,7 +1,7 @@
 import numpy as np
-from Infrastructure.utils import Matrix, Scalar, jit
+from Infrastructure.utils import Matrix, Scalar, jit, Consts
 from performance_measure import time_measure
-from Infrastructure.Matrices.sparse_matrices import CirculantSparseMatrix
+from Infrastructure.Matrices.sparse_matrices import CirculantSparseMatrix, AlmostTridiagonalToeplitzMatrix
 
 
 @jit
@@ -13,9 +13,9 @@ def exact_solution(x: Matrix, t: Scalar) -> Matrix:
     :return: The sampled solution's values as a matrix. Each component of the solution is spread
      over a row (and not a column)
     """
-    pi_factor: float = 2 * np.pi
+    pi_factor: float = 2 * Consts.PI
     factor: Matrix = pi_factor * x + (pi_factor ** 2 + 1) * t
-    time_coeff: complex = np.e ** (3j * t)
+    time_coeff: complex = Consts.E ** (3j * t)
     value: Matrix = time_coeff * np.vstack((np.cos(factor), -1j * np.sin(factor)))
     return value
 
@@ -31,11 +31,13 @@ def non_homogeneous_term(x: Matrix, t: Scalar) -> Matrix:
 
 
 if __name__ == "__main__":
-    n = 15
-    x = np.linspace(0, 2 * np.pi, n)
-    a = exact_solution(x, 0)
+    n = 4
+    x = np.linspace(0, 2 * Consts.PI, n)
+    a = np.ones((1, n), dtype=complex)  # exact_solution(x, 0)
     b = CirculantSparseMatrix(n=n, nonzero_terms=[1, 2, 3], nonzero_indices=[0, 1, 2])
+    d = AlmostTridiagonalToeplitzMatrix(n, [2, 2, 2])
     print(b.dot(a))
+    print(d.inverse_solution(a))
 
     def f():
         b.dot(a)

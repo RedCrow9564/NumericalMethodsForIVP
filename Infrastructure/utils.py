@@ -38,6 +38,11 @@ class BaseEnum(enumerate, metaclass=_MetaEnum):
         return all_attributes
 
 
+class Consts(BaseEnum):
+    PI = np.pi
+    E = np.e
+
+
 def jit(signature_or_function=None, target: str = "cpu", parallel: bool = False) -> Callable:
     """
     A wrapper for numba.jit decorator. Used for accelerating functions.
