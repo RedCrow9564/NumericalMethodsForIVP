@@ -1,7 +1,5 @@
 import numpy as np
 from scipy.sparse import diags
-from numba import jitclass
-from ..utils import range_wrap, jit
 from .circulant_sparse_product import compute, solve_almost_tridiagonal_system
 
 
@@ -29,7 +27,7 @@ class AlmostTridiagonalToeplitzMatrix(CirculantSparseMatrix):
         self._diag_term = nonzero_terms[0]
         self._up_diag = nonzero_terms[1]
         self._sub_diag = nonzero_terms[2]
-        self._mat = diags(diagonals, [0, 1, -1, -n + 1, n - 1]).toarray()
+        #self._mat = diags(diagonals, [0, 1, -1, -n + 1, n - 1]).toarray()
         #self._inverse = np.linalg.inv(self._mat)
 
     def inverse_solution(self, current_state):
@@ -37,4 +35,15 @@ class AlmostTridiagonalToeplitzMatrix(CirculantSparseMatrix):
         for row_index, component_current_state in enumerate(current_state):
             solve_almost_tridiagonal_system(self._diag_term, self._sub_diag, self._up_diag, self._n,
                                             current_state[row_index, :], empty_vector)
+        return current_state
+
+
+class IdentityMatrix(object):
+    def __init__(self, n):
+        self._n = n
+
+    def dot(self, current_state):
+        return current_state
+
+    def inverse_solution(self, current_state):
         return current_state

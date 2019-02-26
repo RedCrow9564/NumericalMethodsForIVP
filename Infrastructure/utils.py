@@ -2,6 +2,7 @@ import numpy as np
 import numba
 from typing import List, Callable, Tuple, ClassVar, Iterable, Mapping, Union
 import inspect
+from enum import Enum
 
 
 # Naming data types for type hinting.
@@ -21,7 +22,7 @@ class _MetaEnum(type):
         return self.enum_contains(item)
 
 
-class BaseEnum(enumerate, metaclass=_MetaEnum):
+class BaseEnum(Enum, metaclass=_MetaEnum):
 
     @classmethod
     def enum_iter(cls):
