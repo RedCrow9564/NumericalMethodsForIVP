@@ -12,7 +12,7 @@ class ModelName(BaseEnum):
 
 # TODO: Replace None with the matching schemes classes, once they are implemented.
 _models_names_to_objects = {
-    ModelName.SchrodingerEquation_ForwardEuler: None,
+    ModelName.SchrodingerEquation_ForwardEuler: SchrodingerEquationForwardEuler,
     ModelName.SchrodingerEquation_LeapFrog: None,
     ModelName.SchrodingerEquation_BackwardEuler: None,
     ModelName.SchrodingerEquation_CrankNicholson: None,

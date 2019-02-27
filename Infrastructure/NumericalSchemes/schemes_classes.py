@@ -6,8 +6,8 @@ from Infrastructure.Matrices.sparse_matrices import CirculantSparseMatrix, Almos
     IdentityMatrix
 
 
-def _sum_all_previous_samples(previous_steps_coefficients: List[Matrix],
-                              previous_steps_states: List[Matrix]) -> Matrix:
+def _sum_all_previous_samples(previous_steps_states: List[Matrix],
+                              previous_steps_coefficients: List[Matrix]) -> Matrix:
     sum: Matrix = np.zeros_like(previous_steps_states[0])
     for function_component, scheme_coefficient in zip(previous_steps_states, previous_steps_coefficients):
         sum += scheme_coefficient.dot(function_component)
@@ -33,7 +33,7 @@ class NumericalScheme(object):
         self._initialize_schemes = initial_steps_schemes
 
     def make_step(self):
-        if self._current_step < self.previous_samples_count:  # If not all previous steps are initialized.
+        if self._current_step < self.previous_samples_count - 1:  # If not all previous steps are initialized.
             initializer_scheme = self._initialize_schemes[0]
             if len(self._previous_states) < initializer_scheme.previous_samples_count:
                 raise IOError("")
@@ -50,7 +50,7 @@ class NumericalScheme(object):
             coefficients_sum: Matrix = _sum_all_previous_samples(self._previous_states,
                                                                  self._previous_steps_coefficients)
             coefficients_sum += non_homogeneous_element
-            for row_index in len(coefficients_sum):
+            for row_index in range(len(coefficients_sum)):
                 function_component = coefficients_sum[row_index]
                 self._current_state[row_index] = self._implicit_component.inverse_solution(function_component)
             self._previous_states.pop()

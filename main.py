@@ -2,6 +2,7 @@ import numpy as np
 from Infrastructure.utils import Matrix, Scalar, jit, Consts
 from performance_measure import time_measure
 from Infrastructure.Matrices.sparse_matrices import CirculantSparseMatrix, AlmostTridiagonalToeplitzMatrix
+from Infrastructure.NumericalSchemes.schemes_factory import create_model, ModelName
 
 
 @jit
@@ -27,18 +28,22 @@ def non_homogeneous_term(x: Matrix, t: Scalar) -> Matrix:
     :param t: A specific sampled time value.
     :return: A scalar integer zero.
     """
-    return 0
+    return np.zeros_like(x)
 
 
 if __name__ == "__main__":
     n = 4
-    x = np.linspace(0, 2 * Consts.PI, n)
-    a = np.ones((1, n), dtype=complex)  # exact_solution(x, 0)
-    b = CirculantSparseMatrix(n=n, nonzero_terms=[1, 2, 3], nonzero_indices=[0, 1, 2])
-    d = AlmostTridiagonalToeplitzMatrix(n, [2, 2, 2])
-    print(b.dot(a))
-    print(d.inverse_solution(a))
+    x = np.linspace(0, 2 * Consts.PI, n + 1)
+    a = np.ones((1, n + 1), dtype=complex)  # exact_solution(x, 0)
+    b = CirculantSparseMatrix(n=n + 1, nonzero_terms=[1, 2, 3], nonzero_indices=[0, 1, 2])
+    d = AlmostTridiagonalToeplitzMatrix(n + 1, [2, 2, 2])
+    #print(b.dot(a))
+    #print(d.inverse_solution(a))
 
     def f():
         b.dot(a)
-    print(time_measure(f, (), 1000))
+    # print(time_measure(f, (), 1000))
+
+    m = create_model(ModelName.SchrodingerEquation_ForwardEuler)
+    model = m(a, n, 0, 1, 1, x, non_homogeneous_term)
+    print(model.make_step())

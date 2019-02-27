@@ -22,7 +22,7 @@ class _MetaEnum(type):
         return self.enum_contains(item)
 
 
-class BaseEnum(Enum, metaclass=_MetaEnum):
+class BaseEnum(metaclass=_MetaEnum):
 
     @classmethod
     def enum_iter(cls):
