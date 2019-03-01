@@ -1,9 +1,9 @@
 import numpy as np
 from collections import deque
 from copy import deepcopy
-from Infrastructure.utils import List, Matrix, Vector, Callable
 from Infrastructure.Matrices.sparse_matrices import CirculantSparseMatrix, AlmostTridiagonalToeplitzMatrix,\
     IdentityMatrix
+from Infrastructure.utils import List, Matrix, Vector, Callable, jit
 
 
 def _sum_all_previous_samples(previous_steps_states: List[Matrix],
@@ -49,23 +49,25 @@ class NumericalScheme(object):
             non_homogeneous_element = self._non_homogeneous_term(x_grid, current_t_grid)[0]
             coefficients_sum: Matrix = _sum_all_previous_samples(self._previous_states,
                                                                  self._previous_steps_coefficients)
-            coefficients_sum += non_homogeneous_element
+            # Adding the non-homogeneous effect to our scheme.
+            coefficients_sum += self._dt * self._non_homogeneous_scaling_factor * non_homogeneous_element
             for row_index in range(len(coefficients_sum)):
                 function_component = coefficients_sum[row_index]
                 self._current_state[row_index] = self._implicit_component.inverse_solution(function_component)
             self._previous_states.pop()
 
-        self._previous_states.append(deepcopy(self._current_state))
+        self._previous_states.appendleft(deepcopy(self._current_state))
         self._current_time += self._dt
         return self._current_state
 
 
 class SchrodingerEquationForwardEuler(NumericalScheme):
     def __init__(self, current_state, n, initial_time, dx, dt, x_samples, non_homogeneous_term) -> None:
+        # Creating the only coefficient matrix.
         ratio = dt / (2 * dx)
         transition_mat = CirculantSparseMatrix(n + 1, [1, ratio, -ratio], [0, 1, n])
         previous_coefficients = [transition_mat]
-        implicit_component = IdentityMatrix(n)  # This method ix fully explicit.
+        implicit_component = IdentityMatrix(n)  # This method is fully explicit.
         initial_steps_schemes = []  # This method is a One-Step method.
         non_homogeneous_scaling_factor = 2
         super(SchrodingerEquationForwardEuler, self).__init__(

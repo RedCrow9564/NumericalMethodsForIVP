@@ -1,6 +1,6 @@
 import numpy as np
 import numba
-from typing import List, Callable, Tuple, ClassVar, Iterable, Mapping, Union
+from typing import List, Callable, Tuple, ClassVar, Iterable, Mapping, Union, Iterator
 import inspect
 from enum import Enum
 
@@ -13,11 +13,11 @@ StaticField = ClassVar
 
 
 class _MetaEnum(type):
-    def __iter__(self):
+    def __iter__(self) -> Iterator:
         # noinspection PyUnresolvedReferences
         return self.enum_iter()
 
-    def __contains__(self, item):
+    def __contains__(self, item) -> bool:
         # noinspection PyUnresolvedReferences
         return self.enum_contains(item)
 
@@ -25,16 +25,16 @@ class _MetaEnum(type):
 class BaseEnum(metaclass=_MetaEnum):
 
     @classmethod
-    def enum_iter(cls):
+    def enum_iter(cls) -> Iterator:
         return iter(cls.get_all_values())
 
     @classmethod
-    def enum_contains(cls, item):
+    def enum_contains(cls, item) -> bool:
         return item in cls.get_all_values()
 
     @classmethod
-    def get_all_values(cls):
-        all_attributes = inspect.getmembers(cls, lambda a: not inspect.ismethod(a))
+    def get_all_values(cls) -> List:
+        all_attributes: List = inspect.getmembers(cls, lambda a: not inspect.ismethod(a))
         all_attributes = [value for name, value in all_attributes if not (name.startswith('__') or name.endswith('__'))]
         return all_attributes
 

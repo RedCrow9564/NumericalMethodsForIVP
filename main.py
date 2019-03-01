@@ -34,7 +34,7 @@ def non_homogeneous_term(x: Matrix, t: Scalar) -> Matrix:
 if __name__ == "__main__":
     n = 4
     x = np.linspace(0, 2 * Consts.PI, n + 1)
-    a = np.ones((1, n + 1), dtype=complex)  # exact_solution(x, 0)
+    a = np.ones((2, n + 1), dtype=complex)  # exact_solution(x, 0)
     b = CirculantSparseMatrix(n=n + 1, nonzero_terms=[1, 2, 3], nonzero_indices=[0, 1, 2])
     d = AlmostTridiagonalToeplitzMatrix(n + 1, [2, 2, 2])
     #print(b.dot(a))
