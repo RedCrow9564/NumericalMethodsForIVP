@@ -3,6 +3,7 @@ from collections import deque
 from copy import deepcopy
 from Infrastructure.Matrices.sparse_matrices import CirculantSparseMatrix, AlmostTridiagonalToeplitzMatrix,\
     IdentityMatrix
+from Infrastructure.NumericalSchemes.schemes_coefficients import FreeCoefficient, SchemeCoefficient, ImplicitCoefficient
 from Infrastructure.utils import List, Matrix, Vector, Callable, jit
 
 
@@ -15,8 +16,9 @@ def _sum_all_previous_samples(previous_steps_states: List[Matrix],
 
 
 class NumericalScheme(object):
-    def __init__(self, previous_steps_coefficients, implicit_component, current_state, initial_time, dx, dt, x_samples,
-                 non_homogeneous_term, non_homogeneous_scaling_factor, initial_steps_schemes) -> None:
+    def __init__(self, previous_steps_coefficients, implicit_component, free_coefficient, current_state,
+                 initial_time, dx, dt, x_samples, non_homogeneous_term, non_homogeneous_scaling_factor,
+                 initial_steps_schemes) -> None:
         self._previous_steps_coefficients: List[Matrix] = previous_steps_coefficients
         self.previous_samples_count = len(self._previous_steps_coefficients)
         self._implicit_component: Matrix = implicit_component
@@ -31,6 +33,7 @@ class NumericalScheme(object):
         self._non_homogeneous_term: Callable = non_homogeneous_term
         self._non_homogeneous_scaling_factor: float = non_homogeneous_scaling_factor
         self._initialize_schemes = initial_steps_schemes
+        self._free_coefficient = free_coefficient
 
     def make_step(self):
         if self._current_step < self.previous_samples_count - 1:  # If not all previous steps are initialized.
@@ -49,6 +52,7 @@ class NumericalScheme(object):
             non_homogeneous_element = self._non_homogeneous_term(x_grid, current_t_grid)[0]
             coefficients_sum: Matrix = _sum_all_previous_samples(self._previous_states,
                                                                  self._previous_steps_coefficients)
+            coefficients_sum += self._free_coefficient.dot(self._current_state)
             # Adding the non-homogeneous effect to our scheme.
             coefficients_sum += self._dt * self._non_homogeneous_scaling_factor * non_homogeneous_element
             for row_index in range(len(coefficients_sum)):
@@ -62,14 +66,46 @@ class NumericalScheme(object):
 
 
 class SchrodingerEquationForwardEuler(NumericalScheme):
-    def __init__(self, current_state, n, initial_time, dx, dt, x_samples, non_homogeneous_term) -> None:
+    def __init__(self, current_state, n, initial_time, dx, dt, x_samples, A, C, non_homogeneous_term) -> None:
         # Creating the only coefficient matrix.
-        ratio = dt / (2 * dx)
-        transition_mat = CirculantSparseMatrix(n + 1, [1, ratio, -ratio], [0, 1, n])
-        previous_coefficients = [transition_mat]
+        ratio = 1j * dt / (2 * dx)
+        transition_mat = CirculantSparseMatrix(n + 1, [1j, ratio, -ratio], [0, 1, n])
+        free_coefficient = FreeCoefficient(C)
+        previous_coefficients = [SchemeCoefficient(between_rows_coefficient=A, inner_row_coefficient=transition_mat)]
         implicit_component = IdentityMatrix(n)  # This method is fully explicit.
         initial_steps_schemes = []  # This method is a One-Step method.
         non_homogeneous_scaling_factor = 2
         super(SchrodingerEquationForwardEuler, self).__init__(
-            previous_coefficients, implicit_component, current_state, initial_time, dx, dt, x_samples,
+            previous_coefficients, implicit_component, free_coefficient, current_state, initial_time, dx, dt, x_samples,
+            non_homogeneous_term, non_homogeneous_scaling_factor, initial_steps_schemes)
+
+
+class SchrodingerEquationBackwardEuler(NumericalScheme):
+    def __init__(self, current_state, n, initial_time, dx, dt, x_samples, A, C, non_homogeneous_term) -> None:
+        # Creating the only coefficient matrix.
+        ratio = 1j * dt / (2 * dx)
+        transition_mat = CirculantSparseMatrix(n + 1, [-1j, -ratio, ratio], [0, 1, n])
+        previous_coefficients = [IdentityMatrix(n)]  # This method is fully implicit.
+        implicit_component = ImplicitCoefficient(n, between_rows_coefficient=A, inner_row_coefficient=transition_mat)
+        free_coefficient = FreeCoefficient(C)
+        initial_steps_schemes = []  # This method is a One-Step method.
+        non_homogeneous_scaling_factor = 2
+        super(SchrodingerEquationBackwardEuler, self).__init__(
+            previous_coefficients, implicit_component, free_coefficient, current_state, initial_time, dx, dt, x_samples,
+            non_homogeneous_term, non_homogeneous_scaling_factor, initial_steps_schemes)
+
+
+class SchrodingerEquationCrankNicholson(NumericalScheme):
+    def __init__(self, current_state, n, initial_time, dx, dt, x_samples, A, C, non_homogeneous_term) -> None:
+        # Creating the only coefficient matrix.
+        ratio = 1j * dt / (4 * dx)
+        explicit_mat = CirculantSparseMatrix(n + 1, [0.5j, ratio, -ratio], [0, 1, n])
+        implicit_mat = CirculantSparseMatrix(n + 1, [-0.5j, -ratio, ratio], [0, 1, n])
+        previous_coefficients = [SchemeCoefficient(between_rows_coefficient=A, inner_row_coefficient=explicit_mat)]
+        implicit_component = ImplicitCoefficient(n, between_rows_coefficient=A, inner_row_coefficient=implicit_mat)
+        free_coefficient = FreeCoefficient(C)
+        initial_steps_schemes = []  # This method is a One-Step method.
+        non_homogeneous_scaling_factor = 2
+        super(SchrodingerEquationCrankNicholson, self).__init__(
+            previous_coefficients, implicit_component, free_coefficient, current_state, initial_time, dx, dt, x_samples,
             non_homogeneous_term, non_homogeneous_scaling_factor, initial_steps_schemes)
