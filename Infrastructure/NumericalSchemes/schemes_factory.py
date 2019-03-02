@@ -15,8 +15,8 @@ class ModelName(BaseEnum):
 _models_names_to_objects = {
     ModelName.SchrodingerEquation_ForwardEuler: SchrodingerEquationForwardEuler,
     ModelName.SchrodingerEquation_LeapFrog: None,
-    ModelName.SchrodingerEquation_BackwardEuler: None,
-    ModelName.SchrodingerEquation_CrankNicholson: None,
+    ModelName.SchrodingerEquation_BackwardEuler: SchrodingerEquationBackwardEuler,
+    ModelName.SchrodingerEquation_CrankNicholson: SchrodingerEquationCrankNicholson,
     ModelName.SchrodingerEquation_DuFortFrankel: None
 }
 

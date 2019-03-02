@@ -25,10 +25,9 @@ class ImplicitCoefficient(SchemeCoefficient):
     def __init__(self, n: int, inner_row_coefficient: Matrix, between_rows_coefficient: Matrix) -> None:
         super(ImplicitCoefficient, self).__init__(inner_row_coefficient=inner_row_coefficient,
                                                   between_rows_coefficient=between_rows_coefficient)
-        total_reshaped_left_hand_matrix = sparse.kron(between_rows_coefficient, inner_row_coefficient)
-        total_reshaped_left_hand_matrix += sparse.identity(total_reshaped_left_hand_matrix.getnnz())
-        self._lu_factors = linalg.lu_factor(total_reshaped_left_hand_matrix.toarray(), overwrite_a=True,
-                                            check_finite=False)
+        total_reshaped_left_hand_matrix = sparse.kron(between_rows_coefficient, inner_row_coefficient.toarray()).toarray()
+        total_reshaped_left_hand_matrix += sparse.identity(total_reshaped_left_hand_matrix.shape[0])
+        self._lu_factors = linalg.lu_factor(total_reshaped_left_hand_matrix, overwrite_a=True, check_finite=False)
 
     def inverse_solution(self, current_state: Matrix) -> Matrix:
         original_shape = current_state.shape

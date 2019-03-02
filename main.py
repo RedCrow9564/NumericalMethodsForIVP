@@ -45,9 +45,9 @@ if __name__ == "__main__":
         b.dot(a)
     # print(time_measure(f, (), 1000))
 
-    A = np.array([[0, 1], [1, 0]])
-    C = np.array(([[3, -1], [-1, 3]]))
+    A = 1j * np.array([[0, 1], [1, 0]])
+    C = 1j * np.array(([[3, -1], [-1, 3]]))
     C = np.zeros_like(C)
-    m = create_model(ModelName.SchrodingerEquation_ForwardEuler)
+    m = create_model(ModelName.SchrodingerEquation_CrankNicholson)
     model = m(a, n, 0, 1, 1, x, A, C, non_homogeneous_term)
     print(model.make_step())

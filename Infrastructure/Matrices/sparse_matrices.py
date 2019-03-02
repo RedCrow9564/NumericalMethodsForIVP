@@ -16,6 +16,13 @@ class CirculantSparseMatrix(object):
             compute(self._terms, self._indices, component_current_state, next_state[row_index, :])
         return next_state
 
+    def toarray(self):
+        array = np.zeros((self._n, self._n))
+        for index, term in zip(self._indices, self._terms):
+            for i in range(self._n):
+                array[i, (index + i) % self._n] = term
+        return array
+
 
 class AlmostTridiagonalToeplitzMatrix(CirculantSparseMatrix):
     def __init__(self, n, nonzero_terms: List[Scalar]) -> None:

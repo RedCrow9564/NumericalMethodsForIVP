@@ -55,9 +55,7 @@ class NumericalScheme(object):
             coefficients_sum += self._free_coefficient.dot(self._current_state)
             # Adding the non-homogeneous effect to our scheme.
             coefficients_sum += self._dt * self._non_homogeneous_scaling_factor * non_homogeneous_element
-            for row_index in range(len(coefficients_sum)):
-                function_component = coefficients_sum[row_index]
-                self._current_state[row_index] = self._implicit_component.inverse_solution(function_component)
+            self._current_state = self._implicit_component.inverse_solution(coefficients_sum)
             self._previous_states.pop()
 
         self._previous_states.appendleft(deepcopy(self._current_state))
@@ -68,8 +66,8 @@ class NumericalScheme(object):
 class SchrodingerEquationForwardEuler(NumericalScheme):
     def __init__(self, current_state, n, initial_time, dx, dt, x_samples, A, C, non_homogeneous_term) -> None:
         # Creating the only coefficient matrix.
-        ratio = 1j * dt / (2 * dx)
-        transition_mat = CirculantSparseMatrix(n + 1, [1j, ratio, -ratio], [0, 1, n])
+        ratio = dt / (2 * dx)
+        transition_mat = CirculantSparseMatrix(n + 1, [1, ratio, -ratio], [0, 1, n])
         free_coefficient = FreeCoefficient(C)
         previous_coefficients = [SchemeCoefficient(between_rows_coefficient=A, inner_row_coefficient=transition_mat)]
         implicit_component = IdentityMatrix(n)  # This method is fully explicit.
@@ -83,8 +81,8 @@ class SchrodingerEquationForwardEuler(NumericalScheme):
 class SchrodingerEquationBackwardEuler(NumericalScheme):
     def __init__(self, current_state, n, initial_time, dx, dt, x_samples, A, C, non_homogeneous_term) -> None:
         # Creating the only coefficient matrix.
-        ratio = 1j * dt / (2 * dx)
-        transition_mat = CirculantSparseMatrix(n + 1, [-1j, -ratio, ratio], [0, 1, n])
+        ratio = dt / (2 * dx)
+        transition_mat = CirculantSparseMatrix(n + 1, [-1, -ratio, ratio], [0, 1, n])
         previous_coefficients = [IdentityMatrix(n)]  # This method is fully implicit.
         implicit_component = ImplicitCoefficient(n, between_rows_coefficient=A, inner_row_coefficient=transition_mat)
         free_coefficient = FreeCoefficient(C)
@@ -98,9 +96,9 @@ class SchrodingerEquationBackwardEuler(NumericalScheme):
 class SchrodingerEquationCrankNicholson(NumericalScheme):
     def __init__(self, current_state, n, initial_time, dx, dt, x_samples, A, C, non_homogeneous_term) -> None:
         # Creating the only coefficient matrix.
-        ratio = 1j * dt / (4 * dx)
-        explicit_mat = CirculantSparseMatrix(n + 1, [0.5j, ratio, -ratio], [0, 1, n])
-        implicit_mat = CirculantSparseMatrix(n + 1, [-0.5j, -ratio, ratio], [0, 1, n])
+        ratio = dt / (4 * dx)
+        explicit_mat = CirculantSparseMatrix(n + 1, [0.5, ratio, -ratio], [0, 1, n])
+        implicit_mat = CirculantSparseMatrix(n + 1, [-0.5, -ratio, ratio], [0, 1, n])
         previous_coefficients = [SchemeCoefficient(between_rows_coefficient=A, inner_row_coefficient=explicit_mat)]
         implicit_component = ImplicitCoefficient(n, between_rows_coefficient=A, inner_row_coefficient=implicit_mat)
         free_coefficient = FreeCoefficient(C)
