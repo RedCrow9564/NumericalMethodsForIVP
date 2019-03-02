@@ -7,18 +7,18 @@ from Infrastructure.NumericalSchemes.schemes_factory import create_model
 
 
 class Experiment(object):
-    def __init__(self, model_name, first_t, last_t, dt, first_x, last_x, dx, n, exact_solution, nonhomogeneous_term):
+    def __init__(self, model_name, first_t, last_t, dt, first_x, last_x, dx, n, A, C, exact_solution,
+                 nonhomogeneous_term):
         self._experiment_time_steps_num = int(np.floor(last_t / dt)) - 1
         self._last_calculated_time = np.floor(last_t / dt) * dt
         self._last_t = last_t
         self._exact_solution = exact_solution
-        self._x_values = np.arange(first_x, last_x, dx)
+        self._x_values = np.linspace(first_x, last_x, n + 1, endpoint=False)
 
         selected_model_type = create_model(model_name)
-        start_conditions = lambda x: exact_solution(x, 0)
-        self.model = selected_model_type(n, dt, first_t, first_x, last_x,
-                                         starting_condition_func=start_conditions,
-                                         nonhomogeneous_term=nonhomogeneous_term)
+        start_conditions = exact_solution(self._x_values, 0)
+        self.model = selected_model_type(start_conditions, n, first_t, dx, dt, self._x_values, A, C,
+                                         nonhomogeneous_term)
         self.results = None
         self.model_error = None
 

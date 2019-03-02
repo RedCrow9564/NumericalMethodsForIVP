@@ -22,9 +22,9 @@ class NumericalScheme(object):
         self._previous_steps_coefficients: List[Matrix] = previous_steps_coefficients
         self.previous_samples_count = len(self._previous_steps_coefficients)
         self._implicit_component: Matrix = implicit_component
-        self._current_state: Matrix = current_state
+        self.current_state: Matrix = current_state
         self._previous_states: List[Matrix] = deque(maxlen=self.previous_samples_count)
-        self._previous_states.append(deepcopy(self._current_state))
+        self._previous_states.append(deepcopy(self.current_state))
         self._current_step = 0
         self._current_time: float = initial_time
         self._dx: float = dx
@@ -43,8 +43,8 @@ class NumericalScheme(object):
             else:
                 needed_previous_states = self._previous_states[0:initializer_scheme.previous_samples_count]
                 initializer_scheme._previous_states = needed_previous_states
-                initializer_scheme.current_state = self._current_state
-                self._current_state = initializer_scheme.make_step()
+                initializer_scheme.current_state = self.current_state
+                self.current_state = initializer_scheme.make_step()
                 self._initialize_schemes.pop()
             self._current_step += 1
         else:
@@ -52,15 +52,15 @@ class NumericalScheme(object):
             non_homogeneous_element = self._non_homogeneous_term(x_grid, current_t_grid)[0]
             coefficients_sum: Matrix = _sum_all_previous_samples(self._previous_states,
                                                                  self._previous_steps_coefficients)
-            coefficients_sum += self._free_coefficient.dot(self._current_state)
+            coefficients_sum += self._free_coefficient.dot(self.current_state)
             # Adding the non-homogeneous effect to our scheme.
             coefficients_sum += self._dt * self._non_homogeneous_scaling_factor * non_homogeneous_element
-            self._current_state = self._implicit_component.inverse_solution(coefficients_sum)
+            self.current_state = self._implicit_component.inverse_solution(coefficients_sum)
             self._previous_states.pop()
 
-        self._previous_states.appendleft(deepcopy(self._current_state))
+        self._previous_states.appendleft(deepcopy(self.current_state))
         self._current_time += self._dt
-        return self._current_state
+        return self.current_state
 
 
 class SchrodingerEquationForwardEuler(NumericalScheme):

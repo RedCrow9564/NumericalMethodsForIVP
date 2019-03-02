@@ -2,7 +2,11 @@ import numpy as np
 from Infrastructure.utils import Matrix, Scalar, jit, Consts
 from performance_measure import time_measure
 from Infrastructure.Matrices.sparse_matrices import CirculantSparseMatrix, AlmostTridiagonalToeplitzMatrix
-from Infrastructure.NumericalSchemes.schemes_factory import create_model, ModelName
+from Infrastructure.NumericalSchemes.schemes_factory import ModelName
+from Infrastructure.Experiments.experiments import Experiment
+
+PI: float = Consts.PI
+E: float = Consts.E
 
 
 @jit
@@ -14,9 +18,9 @@ def exact_solution(x: Matrix, t: Scalar) -> Matrix:
     :return: The sampled solution's values as a matrix. Each component of the solution is spread
      over a row (and not a column)
     """
-    pi_factor: float = 2 * Consts.PI
+    pi_factor: float = 2 * PI
     factor: Matrix = pi_factor * x + (pi_factor ** 2 + 1) * t
-    time_coeff: complex = Consts.E ** (3j * t)
+    time_coeff: complex = E ** (3j * t)
     value: Matrix = time_coeff * np.vstack((np.cos(factor), -1j * np.sin(factor)))
     return value
 
@@ -45,9 +49,18 @@ if __name__ == "__main__":
         b.dot(a)
     # print(time_measure(f, (), 1000))
 
+    first_t = 0
+    last_t = 1
+    first_x = 0
+    last_x = 1
+    dt = 0.2
+    dx = 0.2
+
     A = 1j * np.array([[0, 1], [1, 0]])
     C = 1j * np.array(([[3, -1], [-1, 3]]))
     C = np.zeros_like(C)
-    m = create_model(ModelName.SchrodingerEquation_ForwardEuler)
-    model = m(a, n, 0, 1, 1, x, A, C, non_homogeneous_term)
-    print(model.make_step())
+
+    e = Experiment(ModelName.SchrodingerEquation_ForwardEuler, first_t, last_t, dt, first_x, last_x, dx, n, A, C,
+                   exact_solution, non_homogeneous_term)
+
+    print(e.run())
