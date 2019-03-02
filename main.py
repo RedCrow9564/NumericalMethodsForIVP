@@ -32,7 +32,7 @@ def non_homogeneous_term(x: Matrix, t: Scalar) -> Matrix:
 
 
 if __name__ == "__main__":
-    n = 4
+    n = 5
     x = np.linspace(0, 2 * Consts.PI, n + 1)
     a = np.ones((2, n + 1), dtype=complex)  # exact_solution(x, 0)
     a[0, :] *= 2
@@ -48,6 +48,6 @@ if __name__ == "__main__":
     A = 1j * np.array([[0, 1], [1, 0]])
     C = 1j * np.array(([[3, -1], [-1, 3]]))
     C = np.zeros_like(C)
-    m = create_model(ModelName.SchrodingerEquation_CrankNicholson)
+    m = create_model(ModelName.SchrodingerEquation_ForwardEuler)
     model = m(a, n, 0, 1, 1, x, A, C, non_homogeneous_term)
     print(model.make_step())
