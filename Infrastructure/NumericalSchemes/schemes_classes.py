@@ -66,8 +66,10 @@ class NumericalScheme(object):
 class SchrodingerEquationForwardEuler(NumericalScheme):
     def __init__(self, current_state, n, initial_time, dx, dt, x_samples, A, C, non_homogeneous_term) -> None:
         # Creating the only coefficient matrix.
-        ratio = dt / (2 * dx)
-        transition_mat = CirculantSparseMatrix(n + 1, [1, ratio, -ratio], [0, 1, n])
+        ratio = dt / dx ** 2
+        transition_mat = CirculantSparseMatrix(n + 1, [-2 * ratio, ratio, ratio], [0, 1, n])
+        for k in range(len(C)):
+            C[k, k] += 1
         free_coefficient = FreeCoefficient(C)
         previous_coefficients = [SchemeCoefficient(between_rows_coefficient=A, inner_row_coefficient=transition_mat)]
         implicit_component = IdentityMatrix(n)  # This method is fully explicit.
@@ -82,9 +84,11 @@ class SchrodingerEquationBackwardEuler(NumericalScheme):
     def __init__(self, current_state, n, initial_time, dx, dt, x_samples, A, C, non_homogeneous_term) -> None:
         # Creating the only coefficient matrix.
         ratio = dt / (2 * dx)
-        transition_mat = CirculantSparseMatrix(n + 1, [-1, -ratio, ratio], [0, 1, n])
+        transition_mat = CirculantSparseMatrix(n + 1, [2*ratio, -ratio, -ratio], [0, 1, n])
         previous_coefficients = [IdentityMatrix(n)]  # This method is fully implicit.
         implicit_component = ImplicitCoefficient(n, between_rows_coefficient=A, inner_row_coefficient=transition_mat)
+        #for k in range(len(C)):
+        #    C[k, k] += 1
         free_coefficient = FreeCoefficient(C)
         initial_steps_schemes = []  # This method is a One-Step method.
         non_homogeneous_scaling_factor = 2
@@ -96,11 +100,13 @@ class SchrodingerEquationBackwardEuler(NumericalScheme):
 class SchrodingerEquationCrankNicholson(NumericalScheme):
     def __init__(self, current_state, n, initial_time, dx, dt, x_samples, A, C, non_homogeneous_term) -> None:
         # Creating the only coefficient matrix.
-        ratio = dt / (4 * dx)
-        explicit_mat = CirculantSparseMatrix(n + 1, [0.5, ratio, -ratio], [0, 1, n])
-        implicit_mat = CirculantSparseMatrix(n + 1, [-0.5, -ratio, ratio], [0, 1, n])
+        ratio = dt / dx ** 2
+        explicit_mat = CirculantSparseMatrix(n + 1, [-2 * ratio, ratio, ratio], [0, 1, n])
+        implicit_mat = CirculantSparseMatrix(n + 1, [2 * ratio, -ratio, -ratio], [0, 1, n])
         previous_coefficients = [SchemeCoefficient(between_rows_coefficient=A, inner_row_coefficient=explicit_mat)]
         implicit_component = ImplicitCoefficient(n, between_rows_coefficient=A, inner_row_coefficient=implicit_mat)
+        for k in range(len(C)):
+            C[k, k] += 1
         free_coefficient = FreeCoefficient(C)
         initial_steps_schemes = []  # This method is a One-Step method.
         non_homogeneous_scaling_factor = 2

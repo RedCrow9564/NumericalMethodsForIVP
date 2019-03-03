@@ -17,7 +17,7 @@ class CirculantSparseMatrix(object):
         return next_state
 
     def toarray(self):
-        array = np.zeros((self._n, self._n))
+        array = np.zeros((self._n, self._n), dtype=complex)
         for index, term in zip(self._indices, self._terms):
             for i in range(self._n):
                 array[i, (index + i) % self._n] = term

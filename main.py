@@ -9,6 +9,10 @@ PI: float = Consts.PI
 E: float = Consts.E
 
 
+def test_solution(x: Matrix, t: Scalar) -> Matrix:
+    return np.ones_like(x.reshape(1, -1), dtype=complex)
+
+
 @jit
 def exact_solution(x: Matrix, t: Scalar) -> Matrix:
     """
@@ -36,17 +40,17 @@ def non_homogeneous_term(x: Matrix, t: Scalar) -> Matrix:
 
 
 if __name__ == "__main__":
-    n = 5
+    n = 8
     x = np.linspace(0, 2 * Consts.PI, n + 1)
-    a = np.ones((2, n + 1), dtype=complex)  # exact_solution(x, 0)
-    a[0, :] *= 2
-    b = CirculantSparseMatrix(n=n + 1, nonzero_terms=[1, 2, 3], nonzero_indices=[0, 1, 2])
-    d = AlmostTridiagonalToeplitzMatrix(n + 1, [2, 2, 2])
+    a = np.ones((1, n + 1), dtype=complex)  # exact_solution(x, 0)
+    #a[0, :] *= 2
+    #b = CirculantSparseMatrix(n=n + 1, nonzero_terms=[1, 2, 3], nonzero_indices=[0, 1, 2])
+    #d = AlmostTridiagonalToeplitzMatrix(n + 1, [2, 2, 2])
     #print(b.dot(a))
     #print(d.inverse_solution(a))
 
-    def f():
-        b.dot(a)
+    #def f():
+    #    b.dot(a)
     # print(time_measure(f, (), 1000))
 
     first_t = 0
@@ -56,11 +60,10 @@ if __name__ == "__main__":
     dt = 0.2
     dx = 0.2
 
-    A = 1j * np.array([[0, 1], [1, 0]])
-    C = 1j * np.array(([[3, -1], [-1, 3]]))
-    C = np.zeros_like(C)
+    A = np.array([[1]])  # 1j * np.array([[0, 1], [1, 0]])
+    C = np.array([[0]])  # 1j * np.array(([[3, -1], [-1, 3]]))
 
-    e = Experiment(ModelName.SchrodingerEquation_ForwardEuler, first_t, last_t, dt, first_x, last_x, dx, n, A, C,
-                   exact_solution, non_homogeneous_term)
+    e = Experiment(ModelName.SchrodingerEquation_CrankNicholson, first_t, last_t, dt, first_x, last_x, dx, n, A, C,
+                   test_solution, non_homogeneous_term)
 
     print(e.run())
