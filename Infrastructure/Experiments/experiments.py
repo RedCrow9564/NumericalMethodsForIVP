@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.offsetbox import AnchoredText
+from copy import deepcopy
 
 from .dt_initializer import calc_dt, ConfigParams
 from Infrastructure.NumericalSchemes.schemes_factory import create_model
@@ -44,15 +45,18 @@ class Experiment(object):
 
 class SingleNManyLambdasExperiments(object):
     def __init__(self, model_name, n, lamda_list, first_t, last_t, first_x, last_x, dt_init_method, exact_solution,
-                 nonhomogeneous_term):
+                 nonhomogeneous_term, A, C):
         self._n = n
         self._dx = (last_x - first_x) / (n + 1)
         self._dt_init_method = dt_init_method
         self._model_errors = []
         self._model_name = model_name
         self._lambda_list = lamda_list
+        self._A = deepcopy(A)
+        self._C = deepcopy(C)
         self._experiment_template = lambda dt, dx, n: Experiment(model_name, first_t, last_t, dt, first_x, last_x, dx,
-                                                                 n, exact_solution, nonhomogeneous_term)
+                                                                 n, self._A, self._C, exact_solution,
+                                                                 nonhomogeneous_term)
 
     def _create_experiment(self, lamda, n):
         dt_init_config = {
@@ -82,7 +86,7 @@ class SingleNManyLambdasExperiments(object):
         plt.rc('font', family='serif')
         ax = plt.subplot('111')
         ax.plot(flipped_lambdas, weighed_errors)
-        ax.set_title(r'{0} scheme for N = {1}'.format(self._model_name.value, self._n), fontsize=14)
+        ax.set_title(r'{0} scheme for N = {1}'.format(self._model_name, self._n), fontsize=14)
         ax.set_xlabel(r'log($\lambda$)', fontsize=14)
         ax.set_ylabel(r'\textit{Weighed L2 approximation log error}', fontsize=14)
 
@@ -92,15 +96,18 @@ class SingleNManyLambdasExperiments(object):
 
 class SingleLambdaManyNExperiments(object):
     def __init__(self, model_name, n_list, lamda, first_t, last_t, first_x, last_x, dt_init_method, exact_solution,
-                 nonhomogeneous_term):
+                 nonhomogeneous_term, A, C):
         self._n_list = n_list
         self._dx_list = ((last_x - first_x) / (n_list + 1)).tolist()
         self._dt_init_method = dt_init_method
         self._model_name = model_name
         self._model_errors = []
         self._lambda = lamda
+        self._A = A
+        self._C = C
         self._experiment_template = lambda dt, dx, n: Experiment(model_name, first_t, last_t, dt, first_x, last_x, dx,
-                                                                 n, exact_solution, nonhomogeneous_term)
+                                                                 n, deepcopy(self._A), deepcopy(self._C),
+                                                                 exact_solution, nonhomogeneous_term)
 
     def _create_experiment(self, dx, n):
         dt_init_config = {
@@ -132,7 +139,7 @@ class SingleLambdaManyNExperiments(object):
         plt.rc('font', family='serif')
         ax = plt.subplot('111')
         ax.plot(flipped_dx, c + slope * flipped_dx)
-        ax.set_title(r'{0} scheme for $\lambda$ = {1}'.format(self._model_name.value, self._lambda), fontsize=14)
+        ax.set_title(r'{0} scheme for $\lambda$ = {1}'.format(self._model_name, self._lambda), fontsize=14)
         ax.set_xlabel(r'\textit{log(dx)}', fontsize=14)
         ax.set_ylabel(r'\textit{Weighed L2 approximation log error}', fontsize=14)
         at = AnchoredText("slope = {0}".format(slope), prop=dict(size=12), frameon=True, loc=2)

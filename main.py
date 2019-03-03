@@ -3,7 +3,8 @@ from Infrastructure.utils import Matrix, Scalar, jit, Consts
 from performance_measure import time_measure
 from Infrastructure.Matrices.sparse_matrices import CirculantSparseMatrix, AlmostTridiagonalToeplitzMatrix
 from Infrastructure.NumericalSchemes.schemes_factory import ModelName
-from Infrastructure.Experiments.experiments import Experiment
+from Infrastructure.Experiments.experiments import SingleLambdaManyNExperiments
+from Infrastructure.Experiments.dt_initializer import DtInitializerMethod
 
 PI: float = Consts.PI
 E: float = Consts.E
@@ -40,9 +41,10 @@ def non_homogeneous_term(x: Matrix, t: Scalar) -> Matrix:
 
 
 if __name__ == "__main__":
-    n = 8
-    x = np.linspace(0, 2 * Consts.PI, n + 1)
-    a = np.ones((1, n + 1), dtype=complex)  # exact_solution(x, 0)
+    n = 6
+    n_list = np.power(2, list(range(3, n)))
+    #x = np.linspace(0, 2 * Consts.PI, n + 1)
+    #a = np.ones((1, n + 1), dtype=complex)  # exact_solution(x, 0)
     #a[0, :] *= 2
     #b = CirculantSparseMatrix(n=n + 1, nonzero_terms=[1, 2, 3], nonzero_indices=[0, 1, 2])
     #d = AlmostTridiagonalToeplitzMatrix(n + 1, [2, 2, 2])
@@ -57,13 +59,14 @@ if __name__ == "__main__":
     last_t = 1
     first_x = 0
     last_x = 1
-    dt = 0.2
-    dx = 0.2
+    lamda = 0.2
 
-    A = np.array([[1]])  # 1j * np.array([[0, 1], [1, 0]])
-    C = np.array([[0]])  # 1j * np.array(([[3, -1], [-1, 3]]))
+    A = 1j * np.array([[0, 1], [1, 0]])  # np.array([[1]])  #
+    C = 1j * np.array(([[3, -1], [-1, 3]]))  # np.array([[0]])  #
 
-    e = Experiment(ModelName.SchrodingerEquation_CrankNicholson, first_t, last_t, dt, first_x, last_x, dx, n, A, C,
-                   test_solution, non_homogeneous_term)
+    e = SingleLambdaManyNExperiments(ModelName.SchrodingerEquation_ForwardEuler, n_list, lamda, first_t, last_t,
+                                     first_x, last_x, DtInitializerMethod.square, exact_solution, non_homogeneous_term,
+                                     A, C)
 
-    print(e.run())
+    e.run_experiments()
+    e.plot_results()
