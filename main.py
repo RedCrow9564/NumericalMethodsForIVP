@@ -10,8 +10,14 @@ PI: float = Consts.PI
 E: float = Consts.E
 
 
+def test_non_homogeneous_element(x: Matrix, t: Scalar) -> Matrix:
+    result = 4 * PI ** 2 * np.cos(2 * PI * (x + t).reshape((1, -1)), dtype=complex)
+    result -= 2 * PI * np.sin(2 * PI * (x + t).reshape((1, -1)), dtype=complex)
+    return result
+
+
 def test_solution(x: Matrix, t: Scalar) -> Matrix:
-    return np.ones_like(x.reshape(1, -1), dtype=complex)
+    return np.cos(2 * PI * (x + t).reshape((1, -1)), dtype=complex)
 
 
 @jit
@@ -41,7 +47,7 @@ def non_homogeneous_term(x: Matrix, t: Scalar) -> Matrix:
 
 
 if __name__ == "__main__":
-    n = 6
+    n = 7
     n_list = np.power(2, list(range(3, n)))
     #x = np.linspace(0, 2 * Consts.PI, n + 1)
     #a = np.ones((1, n + 1), dtype=complex)  # exact_solution(x, 0)
@@ -59,12 +65,12 @@ if __name__ == "__main__":
     last_t = 1
     first_x = 0
     last_x = 1
-    lamda = 0.2
+    lamda = 0.5
 
-    A = 1j * np.array([[0, 1], [1, 0]])  # np.array([[1]])  #
-    C = 1j * np.array(([[3, -1], [-1, 3]]))  # np.array([[0]])  #
+    A = 1j * np.array([[0, 1], [1, 0]])  # np.array([[1]])
+    C = 1j * np.array(([[3, -1], [-1, 3]]))  # np.array([[0]])
 
-    e = SingleLambdaManyNExperiments(ModelName.SchrodingerEquation_ForwardEuler, n_list, lamda, first_t, last_t,
+    e = SingleLambdaManyNExperiments(ModelName.SchrodingerEquation_CrankNicholson, n_list, lamda, first_t, last_t,
                                      first_x, last_x, DtInitializerMethod.square, exact_solution, non_homogeneous_term,
                                      A, C)
 
