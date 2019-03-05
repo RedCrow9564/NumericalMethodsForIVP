@@ -52,7 +52,8 @@ class NumericalScheme(object):
             non_homogeneous_element = self._non_homogeneous_term(x_grid, current_t_grid)[0]
             coefficients_sum: Matrix = _sum_all_previous_samples(self._previous_states,
                                                                  self._previous_steps_coefficients)
-            coefficients_sum += self._free_coefficient.dot(self.current_state)
+            coefficients_sum += self._dt * self._free_coefficient.dot(self.current_state)
+            coefficients_sum += self.current_state
             # Adding the non-homogeneous effect to our scheme.
             coefficients_sum += self._dt * self._non_homogeneous_scaling_factor * non_homogeneous_element
             self.current_state = self._implicit_component.inverse_solution(coefficients_sum)
@@ -85,10 +86,8 @@ class SchrodingerEquationBackwardEuler(NumericalScheme):
         # Creating the only coefficient matrix.
         ratio = dt / dx ** 2
         transition_mat = CirculantSparseMatrix(n + 1, [2*ratio, -ratio, -ratio], [0, 1, n])
-        previous_coefficients = [IdentityMatrix(n)]  # This method is fully implicit.
+        previous_coefficients = [np.zeros_like(A)]  # This method is fully implicit.
         implicit_component = ImplicitCoefficient(n, between_rows_coefficient=A, inner_row_coefficient=transition_mat)
-        #for k in range(len(C)):
-        #    C[k, k] += 1
         free_coefficient = FreeCoefficient(C)
         initial_steps_schemes = []  # This method is a One-Step method.
         non_homogeneous_scaling_factor = 1
@@ -105,8 +104,6 @@ class SchrodingerEquationCrankNicholson(NumericalScheme):
         implicit_mat = CirculantSparseMatrix(n + 1, [2 * ratio, -ratio, -ratio], [0, 1, n])
         previous_coefficients = [SchemeCoefficient(between_rows_coefficient=A, inner_row_coefficient=explicit_mat)]
         implicit_component = ImplicitCoefficient(n, between_rows_coefficient=A, inner_row_coefficient=implicit_mat)
-        for k in range(len(C)):
-            C[k, k] += 1
         free_coefficient = FreeCoefficient(C)
         initial_steps_schemes = []  # This method is a One-Step method.
         non_homogeneous_scaling_factor = 1
