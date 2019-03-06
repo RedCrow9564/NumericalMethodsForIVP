@@ -66,12 +66,12 @@ if __name__ == "__main__":
     last_t = 1
     first_x = 0
     last_x = 1
-    lamda = 0.5
+    lamda = 0.3
 
     A = 1j * np.array([[0, 1], [1, 0]])  # np.array([[1]])
     C = 1j * np.array(([[3, -1], [-1, 3]]))  # np.array([[0]])
 
-    e = SingleLambdaManyNExperiments(ModelName.SchrodingerEquation_BackwardEuler, n_list, lamda, first_t, last_t,
+    e = SingleLambdaManyNExperiments(ModelName.SchrodingerEquation_LeapFrog, n_list, lamda, first_t, last_t,
                                      first_x, last_x, DtInitializerMethod.square, exact_solution, non_homogeneous_term,
                                      A, C)
 

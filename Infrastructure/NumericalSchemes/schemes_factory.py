@@ -4,17 +4,17 @@ from .schemes_classes import *
 
 
 class ModelName(BaseEnum):
-    SchrodingerEquation_ForwardEuler = "Schrodinger Equation - Forward Euler"
-    SchrodingerEquation_LeapFrog = "Schrodinger Equation - Leap Frog"
-    SchrodingerEquation_BackwardEuler = "Schrodinger Equation - Backward Euler"
-    SchrodingerEquation_CrankNicholson = "Schrodinger Equation - Crank Nicholson"
-    SchrodingerEquation_DuFortFrankel = "Schrodinger Equation - DuFort Frankel"
+    SchrodingerEquation_ForwardEuler = "Schrodinger-like Equation - Forward Euler"
+    SchrodingerEquation_LeapFrog = "Schrodinger-like Equation - Leap Frog"
+    SchrodingerEquation_BackwardEuler = "Schrodinger-like Equation - Backward Euler"
+    SchrodingerEquation_CrankNicholson = "Schrodinger-like Equation - Crank Nicholson"
+    SchrodingerEquation_DuFortFrankel = "Schrodinger-like Equation - DuFort Frankel"
 
 
 # TODO: Replace None with the matching schemes classes, once they are implemented.
 _models_names_to_objects = {
     ModelName.SchrodingerEquation_ForwardEuler: SchrodingerEquationForwardEuler,
-    ModelName.SchrodingerEquation_LeapFrog: None,
+    ModelName.SchrodingerEquation_LeapFrog: SchrodingerEquationLeapFrog,
     ModelName.SchrodingerEquation_BackwardEuler: SchrodingerEquationBackwardEuler,
     ModelName.SchrodingerEquation_CrankNicholson: SchrodingerEquationCrankNicholson,
     ModelName.SchrodingerEquation_DuFortFrankel: None
