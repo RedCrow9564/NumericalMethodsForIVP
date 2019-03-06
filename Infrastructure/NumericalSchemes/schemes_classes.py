@@ -138,3 +138,26 @@ class SchrodingerEquationLeapFrog(NumericalScheme):
         super(SchrodingerEquationLeapFrog, self).__init__(
             previous_coefficients, implicit_component, C, current_state, initial_time, dx, dt, x_samples,
             non_homogeneous_term, non_homogeneous_scaling_factor, initial_steps_schemes)
+
+
+class SchrodingerEquationDuFortFrankel(NumericalScheme):
+    def __init__(self, current_state, n, initial_time, dx, dt, x_samples, A, C, non_homogeneous_term):
+        # Creating the only coefficient matrix.
+        ratio = (2 * dt) / dx ** 2
+        explicit_mat = CirculantSparseMatrix(n + 1, [-2 * ratio, ratio, ratio], [0, 1, n])
+        previous_coefficients = [SchemeCoefficient(between_rows_coefficient=A, inner_row_coefficient=explicit_mat),
+                                 FreeCoefficient(between_rows_coefficient=np.eye(2))]
+        implicit_component = IdentityMatrix(n)  # This method is fully explicit.
+        # Leap-Frog schemes is a TWO-steps method, so the second element requires initialization by a ONE-step method.
+        C *= dt
+        c_copy = deepcopy(C)
+        for k in range(len(c_copy)):
+            c_copy[k, k] += 1
+        initial_steps_schemes = [
+            SchrodingerEquationForwardEuler(
+                current_state, n, initial_time, dx, dt, x_samples, A, c_copy, non_homogeneous_term)]
+        C *= 2
+        non_homogeneous_scaling_factor = 2
+        super(SchrodingerEquationDuFortFrankel, self).__init__(
+            previous_coefficients, implicit_component, C, current_state, initial_time, dx, dt, x_samples,
+            non_homogeneous_term, non_homogeneous_scaling_factor, initial_steps_schemes)
